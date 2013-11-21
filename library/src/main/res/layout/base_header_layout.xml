@@ -32,7 +32,7 @@
          with setupInnerViewElements(android.view.ViewGroup, android.view.View) method in CardHeader class.-->
     <FrameLayout
         android:id="@+id/card_header_inner_frame"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
 

@@ -18,6 +18,16 @@
 
 package it.gmariotti.cardslib.library.view.component;
 
+import it.gmariotti.cardslib.library.Constants;
+import it.gmariotti.cardslib.library.R;
+import it.gmariotti.cardslib.library.internal.CardThumbnail;
+import it.gmariotti.cardslib.library.utils.CacheUtil;
+import it.gmariotti.cardslib.library.view.base.CardViewInterface;
+
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.net.URL;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -28,43 +38,29 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.v4.util.LruCache;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.net.URL;
-
-import it.gmariotti.cardslib.library.Constants;
-import it.gmariotti.cardslib.library.R;
-import it.gmariotti.cardslib.library.internal.CardThumbnail;
-import it.gmariotti.cardslib.library.utils.CacheUtil;
-import it.gmariotti.cardslib.library.view.base.CardViewInterface;
-
 /**
- * Compound View for Thumbnail Component.
- * </p>
- * It is built with base_thumbnail_layout.xml.
- * </p>
- * Please note that this is currently in a preview state.
- * This means that the API is not fixed and you should expect changes between releases.
- * </p>
- * This class load a bitmap resource using {@link android.util.LruCache} and using an
- * AsyncTask to prevent UI blocks.
- *
+ * Compound View for Thumbnail Component. </p> It is built with
+ * base_thumbnail_layout.xml. </p> Please note that this is currently in a
+ * preview state. This means that the API is not fixed and you should expect
+ * changes between releases. </p> This class load a bitmap resource using
+ * {@link android.util.LruCache} and using an AsyncTask to prevent UI blocks.
+ * 
  * @author Gabriele Mariotti (gabri.mariotti@gmail.com)
  */
 public class CardThumbnailView extends FrameLayout implements CardViewInterface {
 
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Custom Attrs
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
     /**
      * Default Layout for Thumbnail View
@@ -87,76 +83,76 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
     /**
      * Used to recycle ui elements.
      */
-    protected boolean mIsRecycle=false;
+    protected boolean mIsRecycle = false;
 
     /**
      * Used to replace inner layout elements.
      */
-    protected boolean mForceReplaceInnerLayout =false;
-
+    protected boolean mForceReplaceInnerLayout = false;
 
     protected boolean mLoadingErrorResource = false;
 
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Constructors
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
     public CardThumbnailView(Context context) {
         super(context);
-        init(null,0);
+        init(null, 0);
     }
 
     public CardThumbnailView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(attrs,0);
+        init(attrs, 0);
     }
 
     public CardThumbnailView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        init(attrs,defStyle);
+        init(attrs, defStyle);
     }
 
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // View
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
     /**
      * ImageView inside CardThumbnail
      */
     protected ImageView mImageView;
 
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Init
-    //--------------------------------------------------------------------------
-
+    // --------------------------------------------------------------------------
 
     /**
      * Initialize
-     *
+     * 
      * @param attrs
      * @param defStyle
      */
-    protected void init(AttributeSet attrs, int defStyle){
-        //Init attrs
-        initAttrs(attrs,defStyle);
+    protected void init(AttributeSet attrs, int defStyle) {
+        // Init attrs
+        initAttrs(attrs, defStyle);
 
-        //Init View
-        if(!isInEditMode())
+        // Init View
+        if (!isInEditMode())
             initView();
     }
+
     /**
      * Init custom attrs.
-     *
+     * 
      * @param attrs
      * @param defStyle
      */
     protected void initAttrs(AttributeSet attrs, int defStyle) {
 
-        TypedArray a = getContext().getTheme().obtainStyledAttributes(
-                attrs, R.styleable.card_options, defStyle, defStyle);
+        TypedArray a = getContext().getTheme().obtainStyledAttributes(attrs, R.styleable.card_options, defStyle,
+                defStyle);
 
         try {
-            card_thumbnail_layout_resourceID= a.getResourceId(R.styleable.card_options_card_thumbnail_layout_resourceID, card_thumbnail_layout_resourceID);
+            card_thumbnail_layout_resourceID = a.getResourceId(
+                    R.styleable.card_options_card_thumbnail_layout_resourceID, card_thumbnail_layout_resourceID);
         } finally {
             a.recycle();
         }
@@ -168,11 +164,10 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
     protected void initView() {
 
         LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mInternalOuterView = inflater.inflate(card_thumbnail_layout_resourceID,this,true);
+        mInternalOuterView = inflater.inflate(card_thumbnail_layout_resourceID, this, true);
 
-        //Get ImageVIew
-        mImageView= (ImageView) findViewById(R.id.card_thumbnail_image);
-
+        // Get ImageVIew
+        mImageView = (ImageView) findViewById(R.id.card_thumbnail_image);
 
         // Get max available VM memory, exceeding this amount will throw an
         // OutOfMemory exception. Stored in kilobytes as LruCache takes an
@@ -183,7 +178,7 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         final int cacheSize = maxMemory / 8;
 
         mMemoryCache = CacheUtil.getMemoryCache();
-        if (mMemoryCache==null){
+        if (mMemoryCache == null) {
             mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
 
                 @Override
@@ -201,18 +196,19 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         }
     }
 
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Add Thumbnail
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
     /**
-     * Adds a {@link CardThumbnail}.
-     * It is important to set all thumbnail values before launch this method.
-     *
-     * @param cardThumbail thumbnail model
+     * Adds a {@link CardThumbnail}. It is important to set all thumbnail values
+     * before launch this method.
+     * 
+     * @param cardThumbail
+     *            thumbnail model
      */
-    public void addCardThumbnail(CardThumbnail cardThumbail ){
-        mCardThumbnail=cardThumbail;
+    public void addCardThumbnail(CardThumbnail cardThumbail) {
+        mCardThumbnail = cardThumbail;
         buildUI();
     }
 
@@ -220,38 +216,38 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
      * Refresh UI
      */
     protected void buildUI() {
-        if (mCardThumbnail==null) return;
+        if (mCardThumbnail == null)
+            return;
 
         if (mIsRecycle)
-            mLoadingErrorResource=false;
+            mLoadingErrorResource = false;
 
-        //Setup InnerView
+        // Setup InnerView
         setupInnerView();
     }
 
-
     /**
      * Sets the inner view.
-     *
+     * 
      */
-    protected void setupInnerView(){
+    protected void setupInnerView() {
 
-        //Setup Elements before load image
-        if (mInternalOuterView!=null)
-            mCardThumbnail.setupInnerViewElements((ViewGroup)mInternalOuterView,mImageView);
+        // Setup Elements before load image
+        if (mInternalOuterView != null)
+            mCardThumbnail.setupInnerViewElements((ViewGroup) mInternalOuterView, mImageView);
 
-        //Load bitmap
-        if (!mCardThumbnail.isExternalUsage()){
-            if(mCardThumbnail.getDrawableResource()>0)
+        // Load bitmap
+        if (!mCardThumbnail.isExternalUsage()) {
+            if (mCardThumbnail.getDrawableResource() > 0)
                 loadBitmap(mCardThumbnail.getDrawableResource(), mImageView);
             else
                 loadBitmap(mCardThumbnail.getUrlResource(), mImageView);
         }
     }
 
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Load Bitmap and cache manage
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
     public void loadBitmap(int resId, ImageView imageView) {
         final String imageKey = String.valueOf(resId);
@@ -263,8 +259,7 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         } else {
             if (cancelPotentialWork(resId, imageView)) {
                 final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
-                final AsyncDrawable asyncDrawable =
-                        new AsyncDrawable(getResources(), null, task);
+                final AsyncDrawable asyncDrawable = new AsyncDrawable(getResources(), null, task);
                 imageView.setImageDrawable(asyncDrawable);
                 task.execute(resId);
             }
@@ -275,38 +270,34 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         final String imageKey = url;
         final Bitmap bitmap = getBitmapFromMemCache(imageKey);
 
-        if (bitmap != null){
+        if (bitmap != null) {
             imageView.setImageBitmap(bitmap);
             sendBroadcast();
-        }else{
+        } else {
             if (cancelPotentialWork(url, imageView)) {
                 final BitmapWorkerUrlTask task = new BitmapWorkerUrlTask(imageView);
-                final AsyncDrawableUrl asyncDrawable =
-                        new AsyncDrawableUrl(getResources(), null, task);
+                final AsyncDrawableUrl asyncDrawable = new AsyncDrawableUrl(getResources(), null, task);
                 imageView.setImageDrawable(asyncDrawable);
                 task.execute(url);
             }
         }
     }
 
-
     protected void addBitmapToMemoryCache(String key, Bitmap bitmap) {
         if (!mLoadingErrorResource && getBitmapFromMemCache(key) == null) {
-            if (key!=null && bitmap!=null){
+            if (key != null && bitmap != null) {
                 mMemoryCache.put(key, bitmap);
             }
         }
     }
 
     protected Bitmap getBitmapFromMemCache(String key) {
-        if (key==null) return null;
+        if (key == null)
+            return null;
         return mMemoryCache.get(key);
     }
 
-
-
-    public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
-                                                         int reqWidth, int reqHeight) {
+    public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId, int reqWidth, int reqHeight) {
 
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
@@ -321,14 +312,13 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         return BitmapFactory.decodeResource(res, resId, options);
     }
 
-    public static Bitmap decodeSampledBitmapFromResource(Resources res, String resUrl,
-                                                         int reqWidth, int reqHeight) {
+    public static Bitmap decodeSampledBitmapFromResource(Resources res, String resUrl, int reqWidth, int reqHeight) {
 
         try {
             // First decode with inJustDecodeBounds=true to check dimensions
             final BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
-            //BitmapFactory.decodeResource(res, resId, options);
+            // BitmapFactory.decodeResource(res, resId, options);
             BitmapFactory.decodeStream(new URL(resUrl).openStream());
 
             // Calculate inSampleSize
@@ -338,30 +328,32 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
             options.inJustDecodeBounds = false;
             return BitmapFactory.decodeStream(new URL(resUrl).openStream());
 
-        }catch (IOException ioe){
-            //Url not available
-            //ioe.printStackTrace();
-            Log.w("CardThumbnailView","Error while retrieving image",ioe);
+        } catch (IOException ioe) {
+            // Url not available
+            // ioe.printStackTrace();
+            Log.w("CardThumbnailView", "Error while retrieving image", ioe);
         }
         return null;
     }
 
-    public static int calculateInSampleSize(
-            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // Raw height and width of image
         final int height = options.outHeight;
         final int width = options.outWidth;
         int inSampleSize = 1;
 
-        if (reqWidth == 0 || reqHeight == 0) return inSampleSize;
+        if (reqWidth == 0 || reqHeight == 0)
+            return inSampleSize;
 
         if (height > reqHeight || width > reqWidth) {
 
-            // Calculate ratios of height and width to requested height and width
+            // Calculate ratios of height and width to requested height and
+            // width
             final int heightRatio = Math.round((float) height / (float) reqHeight);
             final int widthRatio = Math.round((float) width / (float) reqWidth);
 
-            // Choose the smallest ratio as inSampleSize value, this will guarantee
+            // Choose the smallest ratio as inSampleSize value, this will
+            // guarantee
             // a final image with both dimensions larger than or equal to the
             // requested height and width.
             inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
@@ -370,9 +362,9 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         return inSampleSize;
     }
 
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Worker
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
     public static boolean cancelPotentialWork(int resId, ImageView imageView) {
         final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
@@ -387,7 +379,8 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
                 return false;
             }
         }
-        // No task associated with the ImageView, or an existing task was cancelled
+        // No task associated with the ImageView, or an existing task was
+        // cancelled
         return true;
     }
 
@@ -404,10 +397,10 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
                 return false;
             }
         }
-        // No task associated with the ImageView, or an existing task was cancelled
+        // No task associated with the ImageView, or an existing task was
+        // cancelled
         return true;
     }
-
 
     protected static BitmapWorkerTask getBitmapWorkerTask(ImageView imageView) {
         if (imageView != null) {
@@ -431,13 +424,13 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         return null;
     }
 
-
     class BitmapWorkerTask extends AsyncTask<Integer, Void, Bitmap> {
         private final WeakReference<ImageView> imageViewReference;
         private int resId = 0;
 
         public BitmapWorkerTask(ImageView imageView) {
-            // Use a WeakReference to ensure the ImageView can be garbage collected
+            // Use a WeakReference to ensure the ImageView can be garbage
+            // collected
             imageViewReference = new WeakReference<ImageView>(imageView);
         }
 
@@ -448,11 +441,11 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
             ImageView thumbnail = imageViewReference.get();
             Bitmap bitmap = decodeSampledBitmapFromResource(getResources(), resId, thumbnail.getWidth(),
                     thumbnail.getHeight());
-            if (bitmap!=null){
+            if (bitmap != null) {
                 addBitmapToMemoryCache(String.valueOf(params[0]), bitmap);
                 return bitmap;
-            }else{
-                return (Bitmap)null;
+            } else {
+                return (Bitmap) null;
             }
 
         }
@@ -466,21 +459,20 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
 
             if (imageViewReference != null && bitmap != null) {
                 final ImageView imageView = imageViewReference.get();
-                final BitmapWorkerTask bitmapWorkerTask =
-                        getBitmapWorkerTask(imageView);
+                final BitmapWorkerTask bitmapWorkerTask = getBitmapWorkerTask(imageView);
                 if (this == bitmapWorkerTask && imageView != null) {
                     imageView.setImageBitmap(bitmap);
                     sendBroadcast();
-                    mLoadingErrorResource=false;
+                    mLoadingErrorResource = false;
                 }
-            }else{
+            } else {
                 sendBroadcast(false);
-                if (mCardThumbnail!=null && mCardThumbnail.getErrorResourceId()!=0){
-                    if (!mLoadingErrorResource){
-                        //To avoid a loop
+                if (mCardThumbnail != null && mCardThumbnail.getErrorResourceId() != 0) {
+                    if (!mLoadingErrorResource) {
+                        // To avoid a loop
                         loadBitmap(mCardThumbnail.getErrorResourceId(), mImageView);
                     }
-                    mLoadingErrorResource=true;
+                    mLoadingErrorResource = true;
                 }
             }
         }
@@ -491,7 +483,8 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         private String resUrl = "";
 
         public BitmapWorkerUrlTask(ImageView imageView) {
-            // Use a WeakReference to ensure the ImageView can be garbage collected
+            // Use a WeakReference to ensure the ImageView can be garbage
+            // collected
             imageViewReference = new WeakReference<ImageView>(imageView);
         }
 
@@ -502,10 +495,10 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
             ImageView thumbnail = imageViewReference.get();
             Bitmap bitmap = decodeSampledBitmapFromResource(getResources(), resUrl, thumbnail.getWidth(),
                     thumbnail.getHeight());
-            if (bitmap!=null){
+            if (bitmap != null) {
                 addBitmapToMemoryCache(String.valueOf(params[0]), bitmap);
                 return bitmap;
-            }else
+            } else
                 return (Bitmap) null;
         }
 
@@ -518,35 +511,31 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
 
             if (imageViewReference != null && bitmap != null) {
                 final ImageView imageView = imageViewReference.get();
-                final BitmapWorkerUrlTask bitmapWorkerTask =
-                        getBitmapWorkerUrlTask(imageView);
+                final BitmapWorkerUrlTask bitmapWorkerTask = getBitmapWorkerUrlTask(imageView);
                 if (this == bitmapWorkerTask && imageView != null) {
                     imageView.setImageBitmap(bitmap);
                     sendBroadcast();
-                    mLoadingErrorResource=false;
+                    mLoadingErrorResource = false;
                 }
-            }else{
+            } else {
                 sendBroadcast(false);
-                if (mCardThumbnail!=null && mCardThumbnail.getErrorResourceId()!=0){
-                    if (!mLoadingErrorResource){
-                        //To avoid a loop
+                if (mCardThumbnail != null && mCardThumbnail.getErrorResourceId() != 0) {
+                    if (!mLoadingErrorResource) {
+                        // To avoid a loop
                         loadBitmap(mCardThumbnail.getErrorResourceId(), mImageView);
                     }
-                    mLoadingErrorResource=true;
+                    mLoadingErrorResource = true;
                 }
             }
         }
     }
 
-
     static class AsyncDrawable extends BitmapDrawable {
         private final WeakReference<BitmapWorkerTask> bitmapWorkerTaskReference;
 
-        public AsyncDrawable(Resources res, Bitmap bitmap,
-                             BitmapWorkerTask bitmapWorkerTask) {
+        public AsyncDrawable(Resources res, Bitmap bitmap, BitmapWorkerTask bitmapWorkerTask) {
             super(res, bitmap);
-            bitmapWorkerTaskReference =
-                    new WeakReference<BitmapWorkerTask>(bitmapWorkerTask);
+            bitmapWorkerTaskReference = new WeakReference<BitmapWorkerTask>(bitmapWorkerTask);
         }
 
         public BitmapWorkerTask getBitmapWorkerTask() {
@@ -557,11 +546,9 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
     static class AsyncDrawableUrl extends BitmapDrawable {
         private final WeakReference<BitmapWorkerUrlTask> bitmapWorkerTaskReference;
 
-        public AsyncDrawableUrl(Resources res, Bitmap bitmap,
-                             BitmapWorkerUrlTask bitmapWorkerTask) {
+        public AsyncDrawableUrl(Resources res, Bitmap bitmap, BitmapWorkerUrlTask bitmapWorkerTask) {
             super(res, bitmap);
-            bitmapWorkerTaskReference =
-                    new WeakReference<BitmapWorkerUrlTask>(bitmapWorkerTask);
+            bitmapWorkerTaskReference = new WeakReference<BitmapWorkerUrlTask>(bitmapWorkerTask);
         }
 
         public BitmapWorkerUrlTask getBitmapWorkerUrlTask() {
@@ -569,20 +556,20 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
         }
     }
 
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Broadcast
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
     /**
      * Send a successful broadcast when image is downloaded
      */
-    protected void sendBroadcast(){
+    protected void sendBroadcast() {
         sendBroadcast(true);
     }
 
     /**
      * Send a broadcast when image is downloaded
-     *
+     * 
      * @param result
      */
     protected void sendBroadcast(boolean result) {
@@ -595,15 +582,16 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
             intent.putExtra(Constants.IntentManager.INTENT_ACTION_IMAGE_DOWNLOADED_EXTRA_ERROR_LOADING, false);
 
         if (mCardThumbnail != null && mCardThumbnail.getParentCard() != null)
-            intent.putExtra(Constants.IntentManager.INTENT_ACTION_IMAGE_DOWNLOADED_EXTRA_CARD_ID, mCardThumbnail.getParentCard().getId());
+            intent.putExtra(Constants.IntentManager.INTENT_ACTION_IMAGE_DOWNLOADED_EXTRA_CARD_ID, mCardThumbnail
+                    .getParentCard().getId());
         if (getContext() != null)
             getContext().sendBroadcast(intent);
 
     }
 
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Getters and Setters
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
     @Override
     public View getInternalOuterView() {
@@ -612,7 +600,7 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
 
     /**
      * Indicates if view can recycle ui elements.
-     *
+     * 
      * @return <code>true</code> if views can recycle ui elements
      */
     public boolean isRecycle() {
@@ -621,8 +609,9 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
 
     /**
      * Sets if view can recycle ui elements
-     *
-     * @param isRecycle  <code>true</code> to recycle
+     * 
+     * @param isRecycle
+     *            <code>true</code> to recycle
      */
     public void setRecycle(boolean isRecycle) {
         this.mIsRecycle = isRecycle;
@@ -630,7 +619,7 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
 
     /**
      * Indicates if inner layout have to be replaced
-     *
+     * 
      * @return <code>true</code> if inner layout can be recycled
      */
     public boolean isForceReplaceInnerLayout() {
@@ -639,12 +628,12 @@ public class CardThumbnailView extends FrameLayout implements CardViewInterface 
 
     /**
      * Sets if inner layout have to be replaced
-     *
-     * @param forceReplaceInnerLayout  <code>true</code> to recycle
+     * 
+     * @param forceReplaceInnerLayout
+     *            <code>true</code> to recycle
      */
     public void setForceReplaceInnerLayout(boolean forceReplaceInnerLayout) {
         this.mForceReplaceInnerLayout = forceReplaceInnerLayout;
     }
-
 
 }

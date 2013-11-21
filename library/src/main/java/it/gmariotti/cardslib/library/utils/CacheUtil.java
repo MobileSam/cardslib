@@ -19,11 +19,11 @@
 package it.gmariotti.cardslib.library.utils;
 
 import android.graphics.Bitmap;
-import android.util.LruCache;
+import android.support.v4.util.LruCache;
 
 /**
  * Utility class for memoryCache
- *
+ * 
  * @author Gabriele Mariotti (gabri.mariotti@gmail.com)
  */
 public class CacheUtil {
@@ -33,10 +33,11 @@ public class CacheUtil {
      */
     protected LruCache<String, Bitmap> mMemoryCache;
 
-    //Singleton
+    // Singleton
     private static CacheUtil sInstance;
 
-    protected CacheUtil(){}
+    protected CacheUtil() {
+    }
 
     public static CacheUtil getInstance() {
         if (sInstance != null)
@@ -45,12 +46,12 @@ public class CacheUtil {
             return sInstance = new CacheUtil();
     }
 
-    public static LruCache<String, Bitmap> getMemoryCache(){
+    public static LruCache<String, Bitmap> getMemoryCache() {
         return CacheUtil.getInstance().mMemoryCache;
     }
 
-    public static void putMemoryCache(LruCache<String, Bitmap> memoryCache){
-        CacheUtil.getInstance().mMemoryCache=memoryCache;
+    public static void putMemoryCache(LruCache<String, Bitmap> memoryCache) {
+        CacheUtil.getInstance().mMemoryCache = memoryCache;
     }
 
 }
