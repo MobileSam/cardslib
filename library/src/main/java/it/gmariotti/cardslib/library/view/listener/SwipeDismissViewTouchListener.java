@@ -78,7 +78,7 @@ public class SwipeDismissViewTouchListener implements View.OnTouchListener {
          * @param cardView               The originating {@link it.gmariotti.cardslib.library.view.CardView}.
          * @parma card                   Card
          */
-        void onDismiss(CardView cardView,Card card);
+        void onDismiss(CardView cardView,Card card,boolean dismissRight);
     }
 
     /**
@@ -165,13 +165,14 @@ public class SwipeDismissViewTouchListener implements View.OnTouchListener {
                 if (dismiss) {
                     // dismiss
 
+                    final boolean isDismissRight = dismissRight;
                     animate(mCardView)
                             .translationX(dismissRight ? mViewWidth : -mViewWidth)
                             .alpha(0).setDuration(mAnimationTime)
                             .setListener(new AnimatorListenerAdapter() {
                                 @Override
                                 public void onAnimationEnd(Animator animation) {
-                                    performDismiss();
+                                    performDismiss(isDismissRight);
                                 }
                             });
                 } else {
@@ -220,7 +221,7 @@ public class SwipeDismissViewTouchListener implements View.OnTouchListener {
     }
 
 
-    private void performDismiss() {
+    private void performDismiss(final boolean dismissRight) {
         // Animate the dismissed view to zero-height and then fire the dismiss callback.
         // This triggers layout on each animation frame; in the future we may want to do something
         // smarter and more performant.
@@ -235,7 +236,7 @@ public class SwipeDismissViewTouchListener implements View.OnTouchListener {
             @Override
             public void onAnimationEnd(Animator animation) {
 
-                mCallbacks.onDismiss(mCardView,mToken);
+                mCallbacks.onDismiss(mCardView,mToken,dismissRight);
                 // Reset view presentation
                 animate(mCardView).alpha(1f);
                 animate(mCardView).translationX(0);
