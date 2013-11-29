@@ -176,7 +176,7 @@ public class SwipeDismissViewTouchListener implements View.OnTouchListener {
                             });
                 } else {
                     // cancel
-                    mCardView.animate().translationX(0).alpha(1)
+                    animate(mCardView).translationX(0).alpha(1)
                             .setDuration(mAnimationTime).setListener(null);
                 }
                 mVelocityTracker.recycle();
@@ -208,8 +208,8 @@ public class SwipeDismissViewTouchListener implements View.OnTouchListener {
 
                 if (mSwiping) {
                     mTranslationX = deltaX;
-                    mCardView.setTranslationX(deltaX);
-                    mCardView.setAlpha(Math.max(0f,
+                    animate(mCardView).translationX(deltaX);
+                    animate(mCardView).alpha(Math.max(0f,
                             Math.min(1f, 1f - 2f * Math.abs(deltaX) / mViewWidth)));
                     return true;
                 }
@@ -237,8 +237,8 @@ public class SwipeDismissViewTouchListener implements View.OnTouchListener {
 
                 mCallbacks.onDismiss(mCardView,mToken);
                 // Reset view presentation
-                mCardView.setAlpha(1f);
-                mCardView.setTranslationX(0);
+                animate(mCardView).alpha(1f);
+                animate(mCardView).translationX(0);
                 //ViewGroup.LayoutParams lp = mCardView.getLayoutParams();
                 lp.height = originalHeight;
                 mCardView.setLayoutParams(lp);
