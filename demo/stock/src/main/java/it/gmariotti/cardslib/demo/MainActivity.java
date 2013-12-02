@@ -19,6 +19,7 @@
 package it.gmariotti.cardslib.demo;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -147,7 +148,7 @@ public class MainActivity extends ActionBarActivity {
         if (savedInstanceState != null) {
             mSelectedFragment = savedInstanceState.getInt(BUNDLE_SELECTEDFRAGMENT);
 
-            FragmentManager fragmentManager = getFragmentManager();
+            FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             if (fragmentManager.findFragmentById(R.id.fragment_main)==null)
                 mBaseFragment = selectFragment(mSelectedFragment);
