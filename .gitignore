@@ -30,3 +30,5 @@ demo/apk/
 #Personal Files
 signing.properties
 lic.properties
+
+.DS_Store
